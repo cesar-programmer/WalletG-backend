@@ -20,5 +20,12 @@ from finance import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/users', views.user_list),
+    path('api/users/', views.user_list),
+    path('api/users/<int:id>', views.user_detail),
+    path('api/goals/', views.goals_list),
+    path('api/goals/<int:id>', views.goals_detail),
+    path('api/tips/', views.tips_list),
+    path('api/tips/<int:id>', views.tips_detail),
+    path('api/account/', views.account_list),
+    path('api/account/<int:id>', views.account_detail),
 ]
