@@ -7,18 +7,32 @@ from rest_framework import status
 
 @api_view(['GET', 'POST'])
 def user_list(request, format=None):
+    if request.method == 'GET':
+        users = user.objects.all()
+        serializer = userSerializer(users, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
-  if request.method == 'GET':
-    users = user.objects.all()
-    serializer = userSerializer(users, many=True)
-    return JsonResponse(serializer.data, safe=False)
+    elif request.method == 'POST':
+        user_data = request.data.get('user')
+        profile_data = request.data.get('profile')
 
-  elif request.method == 'POST':
-    serializer = userSerializer(data=request.data)
-    if serializer.is_valid():
-      serializer.save()
-      return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_serializer = userSerializer(data=user_data)
+        if user_serializer.is_valid():
+            created_user = user_serializer.save()  # Guarda el usuario y recupera la instancia
+            # Ahora crea el perfil asociado a este usuario
+            profile_data['user'] = created_user.id  # Asegúrate de asignar el ID del usuario recién creado al perfil
+            profile_serializer = profileSerializer(data=profile_data)
+            if profile_serializer.is_valid():
+                profile_serializer.save()
+                return Response({
+                    'user': user_serializer.data,
+                    'profile': profile_serializer.data
+                }, status=status.HTTP_201_CREATED)
+            else:
+                created_user.delete()  # Elimina el usuario si la creación del perfil falla
+                return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
