@@ -79,6 +79,7 @@ class Fiance_goal(models.Model):
   amount = models.DecimalField(max_digits=10, decimal_places=2)
   date = models.DateField()
   achieved = models.BooleanField()
+  progress = models.DecimalField(max_digits=10, decimal_places=2)
 
 
 class Finance_tip(models.Model):

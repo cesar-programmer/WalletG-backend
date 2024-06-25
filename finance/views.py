@@ -200,3 +200,10 @@ def current_user(request):
     # Utiliza el usuario ya autenticado que está adjunto al request
     serializer = userSerializer(request.user)
     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def current_user_profile(request):
+    profile = Profile.objects.get(user=request.user)
+    serializer = profileSerializer(profile)
+    return Response(serializer.data)
