@@ -99,7 +99,7 @@ def goals_list(request, format=None):
 @permission_classes([IsAuthenticated])
 def goals_detail(request, id):
     try:
-        goals = Fiance_goal.objects.get(id=id, ID_user=request.user)
+        goals = Fiance_goal.objects.get(ID_goal=id, ID_user=request.user)
     except Fiance_goal.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
