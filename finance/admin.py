@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Profile, Account_type, Currency, Account, Fiance_goal, Finance_tip, Acces_tip
+from .models import User, Profile, Account_type, Currency, Account, Fiance_goal, Finance_tip, Acces_tip, Transaction, Type_transaction
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django import forms
@@ -35,6 +35,11 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('email', 'user_name')
     ordering = ('email',)  # Establece el criterio de ordenación
 
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('ID_user', 'ID_account', 'amount', 'description', 'date', 'type')
+
+
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Profile)
 admin.site.register(Account_type)
@@ -43,3 +48,4 @@ admin.site.register(Account)
 admin.site.register(Fiance_goal)
 admin.site.register(Finance_tip)
 admin.site.register(Acces_tip)
+admin.site.register(Type_transaction)

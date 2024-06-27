@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import transaction as db_transaction 
 
 class UserManager(BaseUserManager):
     def create_user(self, email, user_name, password=None, **extra_fields):
@@ -95,3 +96,48 @@ class Acces_tip(models.Model):
   ID_user = models.ForeignKey(User, on_delete=models.CASCADE)
   ID_tip = models.ForeignKey(Finance_tip, on_delete=models.CASCADE)
   date = models.DateField()
+
+
+class Transaction(models.Model):
+  ID_user = models.ForeignKey(User, on_delete=models.CASCADE)
+  ID_account = models.ForeignKey(Account, on_delete=models.CASCADE)
+  amount = models.DecimalField(max_digits=10, decimal_places=2)
+  date = models.DateField(auto_now_add=True)
+  description = models.CharField(max_length=200)
+  type = models.ForeignKey('Type_transaction', on_delete=models.CASCADE)
+
+  def __str__(self):
+      return self.description
+
+  def save(self, *args, **kwargs):
+      with db_transaction.atomic():
+          account = Account.objects.get(id=self.ID_account.id)
+          if self.type.description.lower() == 'income':
+              account.balance += self.amount
+              # Actualiza el progreso de las metas
+              self.update_goals_progress(self.ID_user, self.amount)
+          elif self.type.description.lower() == 'expense':
+              if account.balance >= self.amount:
+                  account.balance -= self.amount
+                  # Actualiza el progreso de las metas
+                  self.update_goals_progress(self.ID_user, -self.amount)
+              else:
+                  raise ValueError("Insufficient balance")
+          account.save()
+          super(Transaction, self).save(*args, **kwargs)
+
+  def update_goals_progress(self, user, amount):
+      goals = Fiance_goal.objects.filter(ID_user=user, achieved=False)
+      for goal in goals:
+          goal.progress += amount
+          if goal.progress >= goal.amount:
+              goal.achieved = True
+          goal.save()
+
+
+class Type_transaction(models.Model):
+  ID_type = models.AutoField(primary_key=True)
+  description = models.CharField(max_length=50)
+
+  def __str__(self):
+    return self.description

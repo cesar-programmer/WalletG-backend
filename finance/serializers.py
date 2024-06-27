@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Profile, Account_type, Currency, Account, Fiance_goal, Finance_tip, Acces_tip
+from .models import User, Profile, Account_type, Currency, Account, Fiance_goal, Finance_tip, Acces_tip, Transaction, Type_transaction
 
 class userSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,4 +50,14 @@ class finance_tipSerializer(serializers.ModelSerializer):
 class acces_tipSerializer(serializers.ModelSerializer):
   class Meta:
     model = Acces_tip
+    fields = '__all__'
+
+class transactionSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Transaction
+    fields = '__all__'
+
+class type_transactionSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Type_transaction
     fields = '__all__'
