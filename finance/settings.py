@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-s(iaedm6561qts=11kwh0q)e6ia28l^uw9##gmpm2@t1b9&@w!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['your-heroku-app-name.herokuapp.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['walletgbackend-ff8754e83cc7.herokuapp.com', 'localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
