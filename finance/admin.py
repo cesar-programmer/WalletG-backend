@@ -4,18 +4,16 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django import forms
 
-# Formularios personalizados para adaptarse al modelo de usuario personalizado
 class CustomUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = User
-        fields = '__all__'  # Especifica los campos que quieres mostrar
+        fields = '__all__' 
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
         fields = ('email',)  # Especifica los campos necesarios para la creación
 
-# Admin personalizado para el modelo de usuario
 class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
@@ -33,7 +31,7 @@ class CustomUserAdmin(UserAdmin):
         ),
     )
     search_fields = ('email', 'user_name')
-    ordering = ('email',)  # Establece el criterio de ordenación
+    ordering = ('email',)
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):

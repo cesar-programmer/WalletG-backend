@@ -3,13 +3,10 @@ from .models import User, Profile, Account_type, Currency, Account, Fiance_goal,
 
 class userSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User  # Make sure the model is also capitalized in the models.py
-        # estos son los campos que se van a serializar y devolver en la respuesta
+        model = User
         fields = ['id', 'email', 'user_name', 'password']
 
     def create(self, validated_data):
-        # Using 'new_user' as the variable name to avoid shadowing the 'User' model
-        # esta función se ejecuta cuando se llama a serializer.save() en la vista
         new_user = User.objects.create_user(
             email=validated_data['email'],
             user_name=validated_data['user_name'],
@@ -53,9 +50,9 @@ class acces_tipSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
 class transactionSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = Transaction
-    fields = '__all__'
+    class Meta:
+        model = Transaction
+        fields = ['ID_account', 'amount', 'date', 'description', 'type']
 
 class type_transactionSerializer(serializers.ModelSerializer):
   class Meta:

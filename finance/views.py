@@ -238,3 +238,11 @@ def update_goals_progress(user, amount):
       if goal.progress >= goal.amount:
           goal.achieved = True
       goal.save()
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def transactions_list(request, format=None):
+    transactions = Transaction.objects.filter(ID_user=request.user)
+    serializer = transactionSerializer(transactions, many=True)
+    return JsonResponse(serializer.data, safe=False)

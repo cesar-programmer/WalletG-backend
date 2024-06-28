@@ -21,5 +21,6 @@ urlpatterns = [
     path('api/users/me/', views.current_user, name='current-user'),
     path('api/users/me/profile/', views.current_user_profile, name='current-user-profile'),
     path('api/transactions/', views.create_transaction, name='create_transaction'),
+    path('api/transactions/list/', views.transactions_list, name='transactions_list'),
 
 ]
