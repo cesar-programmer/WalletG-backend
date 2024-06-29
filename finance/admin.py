@@ -7,27 +7,27 @@ from django import forms
 class CustomUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = User
-        fields = '__all__' 
+        fields = '__all__'
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ('email',)  # Especifica los campos necesarios para la creación
+        fields = ('email', 'user_name')
 
 class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
     model = User
-    list_display = ['email', 'user_name', 'is_active', 'is_staff']  # Campos a mostrar en la lista
-    list_filter = ['is_staff', 'is_superuser', 'is_active']  # Filtros disponibles
+    list_display = ['email', 'user_name', 'is_active', 'is_staff', 'is_superuser']
+    list_filter = ['is_staff', 'is_superuser', 'is_active']
     fieldsets = (
         (None, {'fields': ('email', 'user_name', 'password')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active')}),
+        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'user_name', 'password1', 'password2', 'is_staff', 'is_active')}
+            'fields': ('email', 'user_name', 'password1', 'password2', 'is_staff', 'is_active', 'is_superuser')}
         ),
     )
     search_fields = ('email', 'user_name')
@@ -36,7 +36,6 @@ class CustomUserAdmin(UserAdmin):
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ('ID_user', 'ID_account', 'amount', 'description', 'date', 'type')
-
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Profile)

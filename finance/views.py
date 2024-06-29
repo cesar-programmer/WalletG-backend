@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
 from rest_framework.authentication import BaseAuthentication
+from decimal import Decimal
 
 class NoAuthRequired(BaseAuthentication):
     def authenticate(self, request):
@@ -208,36 +209,49 @@ def current_user_profile(request):
     serializer = profileSerializer(profile)
     return Response(serializer.data)
 
+from django.db import transaction
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_transaction(request):
-  serializer = transactionSerializer(data=request.data)
-  if serializer.is_valid():
-      account = Account.objects.get(id=serializer.validated_data['ID_account'].id)
-      transaction_type = serializer.validated_data['type']
+    serializer = transactionSerializer(data=request.data)
+    if serializer.is_valid():
+        with transaction.atomic():
+            account = Account.objects.select_for_update().get(id=serializer.validated_data['ID_account'].id)
+            transaction_type = serializer.validated_data['type']
+            amount = serializer.validated_data['amount']
 
-      if transaction_type.description.lower() == 'income':
-          account.balance += serializer.validated_data['amount']
-          update_goals_progress(request.user, serializer.validated_data['amount'])
-      elif transaction_type.description.lower() == 'expense':
-          if account.balance >= serializer.validated_data['amount']:
-              account.balance -= serializer.validated_data['amount']
-              update_goals_progress(request.user, -serializer.validated_data['amount'])
-          else:
-              return Response({"error": "Insufficient balance"}, status=status.HTTP_400_BAD_REQUEST)
+            if transaction_type.description.lower() == 'income':
+                account.balance += amount
+                update_goals_progress(request.user, amount)
+            elif transaction_type.description.lower() == 'expense':
+                if account.balance >= amount:
+                    account.balance -= amount
+                    update_goals_progress(request.user, -amount)
+                else:
+                    return Response({"error": "Insufficient balance"}, status=status.HTTP_400_BAD_REQUEST)
 
-      account.save()
-      serializer.save(ID_user=request.user)
-      return Response(serializer.data, status=status.HTTP_201_CREATED)
-  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            account.save()
+            new_transaction = serializer.save(ID_user=request.user)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 def update_goals_progress(user, amount):
-  goals = Fiance_goal.objects.filter(ID_user=user, achieved=False)
-  for goal in goals:
-      goal.progress += amount
-      if goal.progress >= goal.amount:
-          goal.achieved = True
-      goal.save()
+    goals = Fiance_goal.objects.filter(ID_user=user, achieved=False)
+    for goal in goals:
+        new_progress = goal.progress + Decimal(amount)
+        
+        goal.progress = min(new_progress, goal.amount)
+        
+        progress_percentage = (goal.progress / goal.amount) * 100
+        
+        goal.progress_percentage = round(progress_percentage, 2)
+        
+        if goal.progress >= goal.amount:
+            goal.achieved = True
+        
+        goal.save()
 
 
 @api_view(['GET'])

@@ -7,20 +7,24 @@ class UserManager(BaseUserManager):
     def create_user(self, email, user_name, password=None, **extra_fields):
         if not email:
             raise ValueError('Users must have an email address')
-        user = self.model(email=self.normalize_email(email), user_name=user_name, **extra_fields)
+        email = self.normalize_email(email)
+        user = self.model(email=email, user_name=user_name, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
 
-    def create_superuser(self, email, password, **extra_fields):
+    def create_superuser(self, email, user_name, password=None, **extra_fields):
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_active', True)
 
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
 
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(email, user_name, password, **extra_fields)
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True,default='example@example.com')
     user_name = models.CharField(max_length=50)
@@ -74,14 +78,14 @@ class Account(models.Model):
     return self.Institution
 
 class Fiance_goal(models.Model):
-  ID_goal = models.AutoField(primary_key=True)
-  ID_user = models.ForeignKey(User, on_delete=models.CASCADE)
-  description = models.CharField(max_length=50)
-  amount = models.DecimalField(max_digits=10, decimal_places=2)
-  date = models.DateField()
-  achieved = models.BooleanField()
-  progress = models.DecimalField(max_digits=10, decimal_places=2)
-
+    ID_goal = models.AutoField(primary_key=True)
+    ID_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.CharField(max_length=50)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField()
+    achieved = models.BooleanField(default=False)
+    progress = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    progress_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
 class Finance_tip(models.Model):
   ID_tip = models.AutoField(primary_key=True)
@@ -108,31 +112,6 @@ class Transaction(models.Model):
 
   def __str__(self):
       return self.description
-
-  def save(self, *args, **kwargs):
-      with db_transaction.atomic():
-          account = Account.objects.get(id=self.ID_account.id)
-          if self.type.description.lower() == 'income':
-              account.balance += self.amount
-              # Actualiza el progreso de las metas
-              self.update_goals_progress(self.ID_user, self.amount)
-          elif self.type.description.lower() == 'expense':
-              if account.balance >= self.amount:
-                  account.balance -= self.amount
-                  # Actualiza el progreso de las metas
-                  self.update_goals_progress(self.ID_user, -self.amount)
-              else:
-                  raise ValueError("Insufficient balance")
-          account.save()
-          super(Transaction, self).save(*args, **kwargs)
-
-  def update_goals_progress(self, user, amount):
-      goals = Fiance_goal.objects.filter(ID_user=user, achieved=False)
-      for goal in goals:
-          goal.progress += amount
-          if goal.progress >= goal.amount:
-              goal.achieved = True
-          goal.save()
 
 
 class Type_transaction(models.Model):
